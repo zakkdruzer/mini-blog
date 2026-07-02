@@ -184,3 +184,69 @@ console.log('Por #js:',        feed.porHashtag('js').map(p => p.autor));
 console.log('Trending:',       feed.trending(3));  // [['js',3],['es6',2],['poo',1]]
 
 console.log("")
+
+console.log("%cEtapa 4 · Usuario — Set de seguidores y mutualidades", "font-weight: bold; color: green; font-size: 15px;");
+console.log("")
+
+class Usuario {
+  #seguidores = new Set();
+  #siguiendo  = new Set();
+
+  constructor({ nombre, username, bio = '' }) {
+    this.nombre   = nombre;
+    this.username = username;
+    this.bio      = bio;
+  }
+
+  seguir(otroUsuario) {
+    if (otroUsuario.username === this.username)
+      throw new Error('No puedes seguirte a ti mismo');
+    this.#siguiendo.add(otroUsuario.username);      // este usuario sigue al otro
+    otroUsuario.#seguidores.add(this.username);     // el otro gana un seguidor
+    return this;
+  }
+
+  dejarDeSeguir(otroUsuario) {
+    this.#siguiendo.delete(otroUsuario.username);  // lo quita de la lista de siguiendo
+    otroUsuario.#seguidores.delete(this.username); // quita este usuario de sus seguidores
+    return this;
+  }
+
+  mutualidades(otroUsuario) {
+    return [...this.#siguiendo].filter(u => otroUsuario.#siguiendo.has(u));
+  }
+
+  get seguidores()   { return this.#seguidores.size; }
+  get siguiendo()    { return this.#siguiendo.size; }
+  get esInfluencer() { return this.seguidores > 2; }
+
+  toString() {
+    return `@${this.username} | ${this.seguidores} seguidores · ${this.siguiendo} siguiendo`;
+  }
+}
+
+// Prueba
+const [juanpa, maria, carlos, ana] = [
+  new Usuario({ nombre: 'Juan Pablo', username: 'juanpa' }),
+  new Usuario({ nombre: 'María',      username: 'maria'  }),
+  new Usuario({ nombre: 'Carlos',     username: 'carlos' }),
+  new Usuario({ nombre: 'Ana',        username: 'ana'    }),
+];
+
+juanpa.seguir(maria).seguir(carlos).seguir(ana);
+maria.seguir(juanpa).seguir(carlos);
+carlos.seguir(ana);
+
+console.log(juanpa.toString());
+console.log(maria.toString());
+console.log('Mutualidades juanpa-maria:', juanpa.mutualidades(maria));  // ['carlos']
+console.log('¿juanpa es influencer?', juanpa.esInfluencer);             // false (0 seguidores)
+console.log('¿maria es influencer?',  maria.esInfluencer);              // false
+
+try {
+  juanpa.seguir(juanpa);  // debe lanzar Error
+} catch(e) {
+  console.log('✅ Error esperado:', e.message);
+}
+
+console.log("")
