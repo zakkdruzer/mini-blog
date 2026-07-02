@@ -110,3 +110,77 @@ dest.desactivar();
 console.log('Vigente:', dest.vigente);  // false
 
 console.log("")
+
+console.log("%cEtapa 3 · Feed — Map de publicaciones + Set de hashtags", "font-weight: bold; color: green; font-size: 15px;");
+console.log("")
+
+class Feed {
+  #publicaciones = new Map();
+  #hashtags      = new Set();
+
+  publicar(publicacion) {
+    this.#publicaciones.set(publicacion.id, publicacion);
+    publicacion.hashtags.forEach(tag => this.#hashtags.add(tag));
+    return this;
+  }
+
+  buscarPorId(id) {
+    const pub = this.#publicaciones.get(id);  // puede ser objeto o undefined
+    return pub ?? null;                       // si es undefined, devuelve null
+  }
+
+  porHashtag(tag) {
+    const publicaciones = [...this.#publicaciones.values()];
+    return publicaciones.filter(p => p.hashtags.includes(tag));
+  }
+
+  get totalLikes() {
+    const publicaciones = [...this.#publicaciones.values()];
+    return publicaciones.reduce((acumulador, pub) => acumulador + pub.likes, 0);
+  }
+
+  get masPopulares() {
+    const publicaciones = [...this.#publicaciones.values()];
+    return publicaciones.sort((a, b) => b.likes - a.likes);
+  }
+
+  trending(n = 5) {
+  const counter = new Map();
+
+  const publicaciones = [...this.#publicaciones.values()];
+  publicaciones.forEach(pub => {
+    pub.hashtags.forEach(tag => {
+      const actual = counter.get(tag) || 0;
+      counter.set(tag, actual + 1);
+    });
+  });
+
+  const ordenados = [...counter.entries()].sort((a, b) => b[1] - a[1]);
+  return ordenados.slice(0, n);
+  }
+
+  get hashtags() { return [...this.#hashtags]; }
+  get total()    { return this.#publicaciones.size; }
+}
+
+// Prueba (asume que Publicacion ya está definida)
+const feed = new Feed();
+const posts = [
+  new Publicacion({ autor: 'juanpa', contenido: 'Aprendí Set y Map hoy', hashtags: ['js', 'es6'] }),
+  new Publicacion({ autor: 'maria',  contenido: 'Primer proyecto con clases',  hashtags: ['poo', 'js'] }),
+  new Publicacion({ autor: 'carlos', contenido: 'Las Promises me cambiaron la vida', hashtags: ['js', 'async'] }),
+  new Publicacion({ autor: 'ana',    contenido: 'ES6 es una maravilla total',  hashtags: ['es6', 'tips'] }),
+];
+
+posts[0].darLike().darLike().darLike();
+posts[2].darLike().darLike();
+posts.forEach(p => feed.publicar(p));
+
+console.log('Total posts:',   feed.total);
+console.log('Hashtags únicos:', feed.hashtags);
+console.log('Total likes:',    feed.totalLikes);    // 5
+console.log('Más popular:',    feed.masPopulares[0].toString());
+console.log('Por #js:',        feed.porHashtag('js').map(p => p.autor));
+console.log('Trending:',       feed.trending(3));  // [['js',3],['es6',2],['poo',1]]
+
+console.log("")
