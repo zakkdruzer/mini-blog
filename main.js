@@ -250,3 +250,74 @@ try {
 }
 
 console.log("")
+
+console.log("%cEtapa 5 · Publicar con Promises — pipeline asíncrono", "font-weight: bold; color: green; font-size: 15px;");
+console.log("")
+
+const validarPublicacion = pub =>
+  new Promise((resolve, reject) =>
+    setTimeout(() => {
+      if (!pub.contenido || pub.contenido.trim() === '') {
+        reject(new Error('Contenido vacío'));
+      } else {
+        resolve(pub);
+      }
+    }, 200)
+  );
+
+const moderarContenido = pub =>
+  new Promise((resolve, reject) =>
+    setTimeout(() => {
+      if (pub.contenido.toLowerCase().includes('spam')) {
+        reject(new Error('Contenido marcado como spam'));
+      } else {
+        resolve({ pub, aprobado: true });
+      }
+    }, 300)
+  );
+
+const guardarEnFeed = (ctx, feed) =>
+  new Promise(resolve =>
+    setTimeout(() => {
+      const { pub } = ctx;   // ya lo tienes preparado
+      feed.publicar(pub);
+      resolve(feed);
+    }, 150)
+  );
+
+// Prueba con los 3 escenarios
+// const feed = new Feed();   // asume Feed definida arriba
+
+const pubValida  = new Publicacion({ autor: 'juanpa', contenido: 'Hoy aprendí Promises y funcionan genial', hashtags: ['js'] });
+const pubVacia   = new Publicacion({ autor: 'maria',  contenido: '',                                         hashtags: [] });
+const pubSpam    = new Publicacion({ autor: 'bot',    contenido: 'Gana dinero rápido — solo spam aquí',       hashtags: ['spam'] });
+
+// Escenario 1: publicación válida
+console.log('📤 Publicando post válido...');
+validarPublicacion(pubValida)
+  .then(moderarContenido)
+  .then(ctx => guardarEnFeed(ctx, feed))
+  .then(() => console.log(`✅ Publicado. Feed tiene ${feed.total} post(s)`))
+  .catch(e => console.log('❌ Error 1:', e.message));
+
+// Escenario 2: contenido vacío
+setTimeout(() => {
+  console.log('📤 Publicando post vacío...');
+  validarPublicacion(pubVacia)
+    .then(moderarContenido)
+    .then(ctx => guardarEnFeed(ctx, feed))
+    .then(() => console.log(`✅ Publicado vacío (no debería pasar)`))
+    .catch(e => console.log('❌ Error 2:', e.message));
+}, 1000);
+
+// Escenario 3: contenido con 'spam'
+setTimeout(() => {
+  console.log('📤 Publicando post con spam...');
+  validarPublicacion(pubSpam)
+    .then(moderarContenido)
+    .then(ctx => guardarEnFeed(ctx, feed))
+    .then(() => console.log(`✅ Publicado spam (no debería pasar)`))
+    .catch(e => console.log('❌ Error 3:', e.message));
+}, 2000);
+
+console.log("")
