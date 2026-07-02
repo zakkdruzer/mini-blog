@@ -72,3 +72,41 @@ console.log("");
 console.log("%cEtapa 2 · Herencia — PublicacionDestacada", "font-weight: bold; color: green; font-size: 15px;");
 console.log("")
 
+class PublicacionDestacada extends Publicacion {
+  constructor({ patrocinador, categoria, vigente = true, ...resto }) {
+    super(resto);  // autor, contenido, hashtags van al padre
+
+    this.patrocinador = patrocinador;
+    this.categoria = categoria;
+    this.vigente = vigente;
+  }
+
+  desactivar(){
+    this.vigente = false;
+    return this
+  }
+
+  toString() {
+  const base = super.toString();
+  return `⭐ [${this.categoria}] (@${this.patrocinador}) ${base}`;
+  }
+
+}
+
+// Prueba
+const dest = new PublicacionDestacada({
+  autor: 'redaccion',
+  contenido: '5 razones para aprender JavaScript en 2026',
+  hashtags: ['js', 'tips'],
+  patrocinador: 'TalentoDigital',
+  categoria: 'TECH'
+});
+
+console.log(dest.toString());
+dest.darLike().darLike();
+console.log('Likes:', dest.likes);
+console.log('¿Es Publicacion?', dest instanceof Publicacion);  // true
+dest.desactivar();
+console.log('Vigente:', dest.vigente);  // false
+
+console.log("")
